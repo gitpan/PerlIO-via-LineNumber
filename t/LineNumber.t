@@ -9,6 +9,8 @@ BEGIN {				# Magic Perl CORE pragma
     }
 }
 
+use strict;
+use warnings;
 use Test::More tests => 26;
 
 BEGIN { use_ok('PerlIO::via::LineNumber') }
@@ -80,7 +82,7 @@ cmp_ok( PerlIO::via::LineNumber->increment,'==',10,'check increment, #3' );
 # Check numbering when reading
 
 ok(
- open( my $in,'<:via(LineNumber)', $file ),
+ open( $in,'<:via(LineNumber)', $file ),
  "opening '$file' for reading"
 );
 PerlIO::via::LineNumber->format( 'whoopee' );

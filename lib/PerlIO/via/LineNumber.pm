@@ -3,7 +3,7 @@ package PerlIO::via::LineNumber;
 # Set the version info
 # Make sure we do things by the book from now on
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use strict;
 
 # Set default initial line number
@@ -86,7 +86,7 @@ sub PUSHED {
 #-----------------------------------------------------------------------
 #  IN: 1 instantiated object
 #      2 handle to read from
-# OUT: 1 decoded string
+# OUT: 1 processed string
 
 sub FILL {
 
@@ -112,7 +112,7 @@ sub FILL {
 
 sub WRITE {
 
-# Obtain local copies of format, line number and increment
+# Obtain local copies of format and increment
 # For all of the lines in this bunch (includes delimiter at end)
 #  Return with error if print failed
 #  Increment the line number
@@ -128,7 +128,8 @@ sub WRITE {
 } #WRITE
 
 #-----------------------------------------------------------------------
-#  IN: class for which to import
+#  IN: 1 class for which to import
+#      2..N parameters passed with -use-
 
 sub import {
 
@@ -269,9 +270,8 @@ L<PerlIO::via> and any other PerlIO::via modules on CPAN.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 Elizabeth Mattijsen.
-
-This library is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+Copyright (c) 2002-2003 Elizabeth Mattijsen.  All rights reserved.  This
+library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
