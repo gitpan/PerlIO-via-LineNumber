@@ -3,7 +3,7 @@ package PerlIO::via::LineNumber;
 # Set the version info
 # Make sure we do things by the book from now on
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 use strict;
 
 # Set default initial line number
@@ -218,6 +218,10 @@ adding line numbers.  The optional input parameter specifies the increment
 that will be used for any files that are opened in the future.  Setting the
 increment will also cause the L<line> to be set to the same value.  The
 default is 1.
+
+=head1 REQUIRED MODULES
+
+ (none)
 
 =head1 EXAMPLES
 
