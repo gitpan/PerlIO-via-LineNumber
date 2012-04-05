@@ -1,74 +1,67 @@
 package PerlIO::via::LineNumber;
 
-# Set the version info
-# Make sure we do things by the book from now on
+$VERSION= '0.04';
 
-$VERSION = '0.03';
+# be as strict as possible
 use strict;
+use warnings;
 
-# Set default initial line number
-# Set default format
-# Set default increment
+# defaults
+my $line=      1;
+my $format=    '%4d %s';
+my $increment= 1;
 
-my $line = 1;
-my $format = '%4d %s';
-my $increment = 1;
-
-# Satisfy -require-
-
+# satisfy -require-
 1;
 
-#-----------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
+#
 # Class methods
-
-#-----------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 #  IN: 1 class (ignored)
 #      2 new value for default initial line number
 # OUT: 1 current default initial line number
 
 sub line {
 
-# Set new default initial line number if one specified
-# Return current default initial line number
+    # set new default initial line number if one specified
+    $line= $_[1] if @_ >1;
 
-   $line = $_[1] if @_ >1;
-   $line;
+    return $line;
 } #line
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 class (ignored)
 #      2 new value for default format
 # OUT: 1 current default format
 
 sub format {
 
-# Set new default format if one specified
-# Return current default format
+    # set new default format if one specified
+    $format= $_[1] if @_ >1;
 
-   $format = $_[1] if @_ >1;
-   $format;
+    return $format;
 } #format
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 class (ignored)
 #      2 new value for default increment and default line number
 # OUT: 1 current default increment
 
 sub increment {
 
-# Set new default increment if one specified
-# Return current default increment
+    # set new default increment if one specified
+    $line= $increment= $_[1] if @_ >1;
 
-   $line = $increment = $_[1] if @_ >1;
-   $increment;
+    return $increment;
 } #increment
 
-#-----------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
+#
 # Subroutines for standard Perl features
-
-#-----------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 #  IN: 1 class to bless with
 #      2 mode string (ignored)
 #      3 file handle of PerlIO layer below (ignored)
@@ -76,35 +69,32 @@ sub increment {
 
 sub PUSHED { 
 
-# Die now if strange mode
-# Create the object with the right fields
-
-#    die "Can only read or write with line numbers" unless $_[1] =~ m#^[rw]$#;
-    bless {line => $line, format => $format, increment => $increment},$_[0];
+    return bless {
+      line      => $line,
+      format    => $format,
+      increment => $increment,
+    }, $_[0];
 } #PUSHED
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 instantiated object
 #      2 handle to read from
 # OUT: 1 processed string
 
 sub FILL {
 
-# If there is a line to be read from the handle
-#  Obtain the current line number
-#  Increment the remembered line number
-#  Return with prefixed line number
-# Return indicating end reached
-
-    if (defined( my $line = readline( $_[1] ) )) {
-	my $number = $_[0]->{'line'};
-	$_[0]->{'line'} += $_[0]->{'increment'};
-        return sprintf( $_[0]->{'format'},$number,$line );
+    # prefix line number
+    if ( defined( my $line= readline( $_[1] ) ) ) {
+        my $number= $_[0]->{line};
+        $_[0]->{line} += $_[0]->{increment};
+        return sprintf $_[0]->{format}, $number, $line;
     }
-    undef;
+
+    # nothing to do
+    return undef;
 } #FILL
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 instantiated object
 #      2 buffer to be written
 #      3 handle to write to
@@ -112,41 +102,41 @@ sub FILL {
 
 sub WRITE {
 
-# Obtain local copies of format and increment
-# For all of the lines in this bunch (includes delimiter at end)
-#  Return with error if print failed
-#  Increment the line number
-# Return total number of octets handled
+    # local copies of format and increment
+    my ( $format, $increment )= @{ $_[0] }{ qw(format increment ) };
 
-    my ($format,$increment) = @{$_[0]}{qw(format increment)};
-    foreach (split( m#(?<=$/)#,$_[1] )) {
+    # print all lines with line number, die if print fails
+    foreach ( split m#(?<=$/)#, $_[1] ) {
         return -1
-	 unless print {$_[2]} sprintf( $format,$_[0]->{'line'},$_ );
-	$_[0]->{'line'} += $increment;
+          if !print { $_[2] } sprintf( $format, $_[0]->{line}, $_ );
+        $_[0]->{line} += $increment;
     }
-    length( $_[1] );
+
+    return length( $_[1] );
 } #WRITE
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 class for which to import
 #      2..N parameters passed with -use-
 
 sub import {
+    my ( $class, %param )= @_;
 
-# Obtain the parameters
-# Loop for all the value pairs specified
-
-    my ($class,%param) = @_;
+    # store parameters using mutators
     $class->$_( $param{$_} ) foreach keys %param;
 } #import
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 __END__
 
 =head1 NAME
 
 PerlIO::via::LineNumber - PerlIO layer for prefixing line numbers
+
+=head1 VERSION
+
+This documentation describes version 0.04.
 
 =head1 SYNOPSIS
 
@@ -188,7 +178,7 @@ using C<binmode()>) B<after> they have been changed.
  use PerlIO::via::LineNumber line => 1;
  
  PerlIO::via::LineNumber->line( 1 );
- my $line = PerlIO::via::LineNumber->line;
+ my $line= PerlIO::via::LineNumber->line;
 
 The class method "line" returns the initial line number that will be used for
 adding line numbers.  The optional input parameter specifies the initial line
@@ -200,7 +190,7 @@ default is 1.
  use PerlIO::via::LineNumber format => '%4d %s';
  
  PerlIO::via::LineNumber->format( '%4d %s' );
- my $format = PerlIO::via::LineNumber->format;
+ my $format= PerlIO::via::LineNumber->format;
 
 The class method "format" returns the format that will be used for adding
 line numbers.  The optional input parameter specifies the format that will
@@ -211,7 +201,7 @@ be used for any files that are opened in the future.  The default is '%4d %s'.
  use PerlIO::via::LineNumber increment => 1;
  
  PerlIO::via::LineNumber->increment( 1 );
- my $increment = PerlIO::via::LineNumber->increment;
+ my $increment= PerlIO::via::LineNumber->increment;
 
 The class method "increment" returns the increment that will be used for
 adding line numbers.  The optional input parameter specifies the increment
@@ -274,8 +264,8 @@ L<PerlIO::via> and any other PerlIO::via modules on CPAN.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002-2003 Elizabeth Mattijsen.  All rights reserved.  This
-library is free software; you can redistribute it and/or modify it under
+Copyright (c) 2002, 2003, 2009, 2012 Elizabeth Mattijsen.  All rights reserved.
+This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
 =cut
